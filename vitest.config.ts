@@ -12,5 +12,10 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
+    globalSetup: ["tests/global-setup.ts"],
+    setupFiles: ["tests/setup.ts"],
+    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "" },
+    testTimeout: 20_000,
+    hookTimeout: 60_000,
   },
 });
