@@ -16,4 +16,16 @@ describe("safeCallbackPath", () => {
     expect(safeCallbackPath(undefined)).toBe("/");
     expect(safeCallbackPath(["/a", "/b"], "/home")).toBe("/home");
   });
+
+  it("rejects values with embedded control characters or backslashes that the URL parser would reinterpret as a host", () => {
+    expect(safeCallbackPath("/\t/evil.example")).toBe("/");
+    expect(safeCallbackPath("/\n/evil.example")).toBe("/");
+    expect(safeCallbackPath("/\r/evil.example")).toBe("/");
+    expect(safeCallbackPath("/foo\\bar")).toBe("/");
+    expect(safeCallbackPath("/ x")).toBe("/");
+  });
+
+  it("keeps a normal path with a query string", () => {
+    expect(safeCallbackPath("/invite/abc?x=1")).toBe("/invite/abc?x=1");
+  });
 });
