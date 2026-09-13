@@ -159,11 +159,11 @@ single-use, expires in 7 days, and the inviter sees who joined.
    | invite created by current user | "This is your own invite — send it to your partner" |
    | current user already in a couple | "You're already paired" + link to home |
    | couple already has 2 members | "This couple is already complete" |
-   | valid | "{inviter} invited you to Duo 💕" + Accept button |
-3. Server Action `acceptInvite(token)`, one transaction:
+   | valid | "{inviter} invited you to Duo 💕" + "What should we call you?" (prefilled with the user's name, e.g. from Google) + Accept button |
+3. Server Action `acceptInvite(token, { userId, name })` (name validated with the same 1–40 char rule), one transaction:
    - look up the invite by token, then `SELECT ... FROM couples WHERE id = invite.couple_id FOR UPDATE`
    - re-check every condition above (the page render check is not trusted)
-   - insert `couple_members`, set `invite.used_at = now()`
+   - insert `couple_members`, set `invite.used_at = now()`, set `user.name`
    - on unique-violation of `couple_members.user_id` (race), return "already paired"
    - redirect to `/home`
 
@@ -215,7 +215,8 @@ action share one set of reason codes and messages.
   - `createCouple`: creates couple, member, invite; rejects user already in a couple; rejects
     future dates.
   - `acceptInvite`: success; expired; used; revoked; own invite; already paired; couple full;
-    concurrent accepts of two different invites for the same couple → exactly one succeeds.
+    two users accepting the same invite concurrently → exactly one succeeds; one user accepting
+    invites to two different couples concurrently → exactly one succeeds.
   - Creating a new invite revokes the previous one.
   - `daysTogether`: timezone boundary cases, day 0.
 - **Playwright (e2e):** user A signs in via magic link (test mode captures the link instead of
