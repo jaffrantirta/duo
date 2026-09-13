@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import { user } from "@/db/schema";
+import { coupleMembers, couples, user } from "@/db/schema";
 import { RESET_SQL } from "./reset-sql";
 
 export async function resetDb(): Promise<void> {
@@ -22,4 +22,10 @@ export async function createTestUser(overrides: { name?: string; email?: string 
     })
     .returning();
   return row;
+}
+
+export async function createTestCouple(userId: string, togetherSince = "2024-05-10"): Promise<string> {
+  const [couple] = await db.insert(couples).values({ togetherSince }).returning({ id: couples.id });
+  await db.insert(coupleMembers).values({ coupleId: couple.id, userId });
+  return couple.id;
 }
