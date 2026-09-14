@@ -14,6 +14,8 @@ export const googleEnabled = Boolean(googleClientId && googleClientSecret);
 
 export const auth = betterAuth({
   baseURL: appUrl(),
+  // Duo sets names through its own validated actions.
+  disabledPaths: ["/update-user"],
   trustedOrigins: process.env.VERCEL_BRANCH_URL ? [`https://${process.env.VERCEL_BRANCH_URL}`] : [],
   database: drizzleAdapter(db, {
     provider: "pg",
