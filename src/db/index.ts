@@ -8,6 +8,9 @@ if (!connectionString) {
 }
 
 export const pool = new Pool({ connectionString });
+pool.on("error", (error: Error) => {
+  console.error("Postgres pool error", error);
+});
 export const db = drizzle({ client: pool, schema });
 
 export type Db = typeof db;
