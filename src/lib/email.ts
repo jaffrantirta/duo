@@ -3,7 +3,11 @@ import path from "node:path";
 import { Resend } from "resend";
 
 export async function sendMagicLinkEmail({ to, url }: { to: string; url: string }): Promise<void> {
-  if (process.env.EMAIL_TRANSPORT === "file" && process.env.VERCEL_ENV !== "production") {
+  if (
+    process.env.EMAIL_TRANSPORT === "file" &&
+    process.env.VERCEL_ENV !== "production" &&
+    process.env.NODE_ENV !== "production"
+  ) {
     const dir = path.join(process.cwd(), ".e2e-mail");
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, `${to.replace(/[^a-zA-Z0-9@._+-]/g, "_")}.txt`), url, "utf8");

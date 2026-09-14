@@ -7,6 +7,10 @@ export async function resetDb(): Promise<void> {
   if (!process.env.TEST_DATABASE_URL || process.env.DATABASE_URL !== process.env.TEST_DATABASE_URL) {
     throw new Error("Refusing to reset a database that is not TEST_DATABASE_URL");
   }
+  const result = await db.execute<{ name: string }>(sql`select current_database() as name`);
+  if (!result.rows[0]?.name.endsWith("_test")) {
+    throw new Error("Refusing to reset a database whose name does not end with _test");
+  }
   await db.execute(sql.raw(RESET_SQL));
 }
 

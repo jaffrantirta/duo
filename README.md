@@ -13,7 +13,7 @@ A little world for the two of you. Next.js 16 · Neon · Better Auth · Vercel.
 ## Tests
 
 - `npm test` — unit and integration tests against `TEST_DATABASE_URL` (it gets truncated).
-- `npm run test:e2e` — Playwright, full pairing flow.
+- `npm run test:e2e` — Playwright, full pairing flow. Run `npx playwright install chromium` once before the first e2e run.
 
 ## Deploy
 
