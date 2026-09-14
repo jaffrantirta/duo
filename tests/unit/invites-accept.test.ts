@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
-import { coupleInvites, coupleMembers, user } from "@/db/schema";
+import { coupleInvites, coupleMembers, couples, user } from "@/db/schema";
 import { createCouple, getCoupleForUser } from "@/lib/couples";
 import {
   INVITE_TTL_MS,
@@ -74,11 +74,18 @@ describe("getInviteView", () => {
     expect(await getInviteView(invite.token, stranger.id)).toEqual({ ok: false, reason: "used" });
   });
 
-  it("reports already_paired when the visitor has a couple", async () => {
+  it("is ok for a visitor who is alone in their own couple", async () => {
     const { invite } = await coupleWithInvite();
-    const other = await createTestUser();
-    await createCouple(other.id, { name: "Other", togetherSince: "2023-01-01" }, "UTC");
-    expect(await getInviteView(invite.token, other.id)).toEqual({ ok: false, reason: "already_paired" });
+    const solo = await coupleWithInvite("Solo");
+    expect(await getInviteView(invite.token, solo.inviter.id)).toEqual({ ok: true, inviterName: "Jaffran" });
+  });
+
+  it("reports already_paired when the visitor's couple has two members", async () => {
+    const { invite } = await coupleWithInvite();
+    const other = await coupleWithInvite("Other");
+    const otherPartner = await createTestUser();
+    await db.insert(coupleMembers).values({ coupleId: other.coupleId, userId: otherPartner.id });
+    expect(await getInviteView(invite.token, other.inviter.id)).toEqual({ ok: false, reason: "already_paired" });
   });
 
   it("reports couple_full when the couple already has two members", async () => {
@@ -129,6 +136,38 @@ describe("acceptInvite", () => {
 
     expect(result).toEqual({ ok: false, reason: "expired" });
     expect(await getCoupleForUser(partner.id)).toBeNull();
+  });
+
+  it("moves a user who is alone in their own couple and removes that couple", async () => {
+    const { coupleId, invite } = await coupleWithInvite();
+    const solo = await coupleWithInvite("Sarah");
+
+    const result = await acceptInvite(invite.token, { userId: solo.inviter.id, name: "Sarah" });
+
+    expect(result).toEqual({ ok: true, coupleId });
+    expect(await db.select().from(couples).where(eq(couples.id, solo.coupleId))).toHaveLength(0);
+    expect(await db.select().from(coupleInvites).where(eq(coupleInvites.coupleId, solo.coupleId))).toHaveLength(0);
+    const couple = await getCoupleForUser(solo.inviter.id);
+    expect(couple?.id).toBe(coupleId);
+    expect(couple?.members.map((m) => m.name)).toEqual(["Jaffran", "Sarah"]);
+  });
+
+  it("reports already_paired for a user whose couple has two members and changes nothing", async () => {
+    const { coupleId, invite } = await coupleWithInvite();
+    const other = await coupleWithInvite("Other");
+    const otherPartner = await createTestUser();
+    await db.insert(coupleMembers).values({ coupleId: other.coupleId, userId: otherPartner.id });
+
+    const result = await acceptInvite(invite.token, { userId: other.inviter.id, name: "Renamed" });
+
+    expect(result).toEqual({ ok: false, reason: "already_paired" });
+    expect((await getCoupleForUser(other.inviter.id))?.id).toBe(other.coupleId);
+    expect(await db.select().from(coupleMembers).where(eq(coupleMembers.coupleId, coupleId))).toHaveLength(1);
+    expect(await db.select().from(coupleMembers).where(eq(coupleMembers.coupleId, other.coupleId))).toHaveLength(2);
+    const [inviteRow] = await db.select().from(coupleInvites).where(eq(coupleInvites.id, invite.id));
+    expect(inviteRow.usedAt).toBeNull();
+    const [row] = await db.select().from(user).where(eq(user.id, other.inviter.id));
+    expect(row.name).toBe("Other");
   });
 
   it("lets exactly one of two people accept the same invite at once", async () => {

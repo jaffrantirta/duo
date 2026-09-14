@@ -18,6 +18,7 @@ export default async function OnboardingPage() {
         </p>
         <h1 className="font-display text-4xl font-bold tracking-tight">{"Let's build your little world"}</h1>
         <p className="text-lg text-muted-foreground">Two quick things, then you can invite your person.</p>
+        <p className="text-sm text-muted-foreground">Got an invite link? Open it to join your partner instead.</p>
       </header>
       <OnboardingForm defaultName={user.name} maxDate={maxDate} />
     </div>

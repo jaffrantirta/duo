@@ -157,12 +157,16 @@ single-use, expires in 7 days, and the inviter sees who joined.
    | expired | same as above, mentioning expiry |
    | used | "This link was already used" |
    | invite created by current user | "This is your own invite — send it to your partner" |
-   | current user already in a couple | "You're already paired" + link to home |
+   | current user's couple already has a partner | "You're already paired" + link to home |
    | couple already has 2 members | "This couple is already complete" |
    | valid | "{inviter} invited you to Duo 💕" + "What should we call you?" (prefilled with the user's name, e.g. from Google) + Accept button |
+
+   A user alone in their own couple can accept: their solo couple is removed in the same transaction.
 3. Server Action `acceptInvite(token, { userId, name })` (name validated with the same 1–40 char rule), one transaction:
-   - look up the invite by token, then `SELECT ... FROM couples WHERE id = invite.couple_id FOR UPDATE`
-   - re-check every condition above (the page render check is not trusted)
+   - look up the invite by token and the user's current couple, then lock both couples in id order in
+     one statement: `SELECT id FROM couples WHERE id IN (invite.couple_id, current couple) ORDER BY id FOR UPDATE`
+   - re-read the invite and re-check every condition above (the page render check is not trusted)
+   - if the user is alone in a different couple, delete that couple (cascades to its membership and invites)
    - insert `couple_members`, set `invite.used_at = now()`, set `user.name`
    - on unique-violation of `couple_members.user_id` (race), return "already paired"
    - redirect to `/home`

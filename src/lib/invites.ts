@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, count, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull } from "drizzle-orm";
 import { db, type DbExecutor } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
 import { coupleInvites, coupleMembers, couples, user } from "@/db/schema";
@@ -111,7 +111,8 @@ async function findProblem(
   if (invite.createdBy === userId) return "own_invite";
   if (invite.usedAt) return "used";
   if (invite.expiresAt <= now) return "expired";
-  if (await findCoupleIdForUser(exec, userId)) return "already_paired";
+  const currentCoupleId = await findCoupleIdForUser(exec, userId);
+  if (currentCoupleId && (await countMembers(exec, currentCoupleId)) >= 2) return "already_paired";
   if ((await countMembers(exec, invite.coupleId)) >= 2) return "couple_full";
   return null;
 }
@@ -146,19 +147,37 @@ export async function acceptInvite(
     return await db.transaction(async (tx): Promise<AcceptInviteResult> => {
       const initial = await loadInvite(tx, token);
       if (!initial) return { ok: false, reason: "not_found" };
+      const currentCoupleId = await findCoupleIdForUser(tx, params.userId);
 
-      // Serialize accepts per couple, then re-read so a concurrent accept's used_at is visible.
-      await tx.select({ id: couples.id }).from(couples).where(eq(couples.id, initial.invite.coupleId)).for("update");
+      // Lock both couples in id order (one statement, no deadlocks), then re-read so a
+      // concurrent accept's changes are visible.
+      const coupleIds = [...new Set([initial.invite.coupleId, currentCoupleId].filter((id) => id !== null))];
+      await tx
+        .select({ id: couples.id })
+        .from(couples)
+        .where(inArray(couples.id, coupleIds))
+        .orderBy(asc(couples.id))
+        .for("update");
       const invite = (await loadInvite(tx, token))?.invite ?? null;
 
       const problem = await findProblem(tx, invite, params.userId, now);
       if (problem || !invite) return { ok: false, reason: problem ?? "not_found" };
 
+      // A user alone in their own couple moves: remove the solo couple (cascades to its invites).
+      if (
+        currentCoupleId &&
+        currentCoupleId !== invite.coupleId &&
+        (await findCoupleIdForUser(tx, params.userId)) === currentCoupleId &&
+        (await countMembers(tx, currentCoupleId)) === 1
+      ) {
+        await tx.delete(couples).where(eq(couples.id, currentCoupleId));
+      }
+
       await tx.insert(coupleMembers).values({ coupleId: invite.coupleId, userId: params.userId });
       await tx.update(coupleInvites).set({ usedAt: now }).where(eq(coupleInvites.id, invite.id));
       await tx.update(user).set({ name: name.data }).where(eq(user.id, params.userId));
       return { ok: true, coupleId: invite.coupleId };
-    });
+    }, { isolationLevel: "read committed" });
   } catch (err) {
     if (isUniqueViolation(err)) return { ok: false, reason: "already_paired" };
     throw err;
