@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Duo
 
-## Getting Started
+A little world for the two of you. Next.js 16 · Neon · Better Auth · Vercel.
 
-First, run the development server:
+## Local setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. `npm install`
+2. Create a Neon project. Use its main database for dev, and a separate database or branch for tests (tests truncate it).
+3. Copy `.env.example` into `.env.local` (dev values) and `.env.test.local` (`TEST_DATABASE_URL` only).
+4. `npm run db:migrate`
+5. `npm run dev` — with `EMAIL_TRANSPORT=file`, magic links are written to `.e2e-mail/<email>.txt`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm test` — unit and integration tests against `TEST_DATABASE_URL` (it gets truncated).
+- `npm run test:e2e` — Playwright, full pairing flow.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel runs `npm run db:migrate && npm run build` (see `vercel.json`). Env vars are listed in `.env.example`.
