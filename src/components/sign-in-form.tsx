@@ -24,7 +24,7 @@ export function SignInForm({ callbackURL, googleEnabled, linkError = false }: Pr
     const { error: sendError } = await authClient.signIn.magicLink({
       email,
       callbackURL,
-      errorCallbackURL: "/sign-in?error=link",
+      errorCallbackURL: `/sign-in?error=link&callbackURL=${encodeURIComponent(callbackURL)}`,
     });
     setPending(null);
     if (sendError) {
@@ -37,7 +37,11 @@ export function SignInForm({ callbackURL, googleEnabled, linkError = false }: Pr
   async function continueWithGoogle() {
     setError(null);
     setPending("google");
-    const { error: googleError } = await authClient.signIn.social({ provider: "google", callbackURL });
+    const { error: googleError } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL,
+      errorCallbackURL: `/sign-in?error=link&callbackURL=${encodeURIComponent(callbackURL)}`,
+    });
     if (googleError) {
       setPending(null);
       setError("Google sign-in didn't work, try again");
