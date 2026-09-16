@@ -15,6 +15,13 @@
       "when": 1789375502802,
       "tag": "0001_peaceful_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789600144223,
+      "tag": "0002_thankful_shocker",
+      "breakpoints": true
     }
   ]
 }

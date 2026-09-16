@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
-import { coupleMembers, couples } from "@/db/schema";
-import { createTestUser, resetDb } from "../helpers/db";
+import { coupleMembers, couples, plans } from "@/db/schema";
+import { createTestUser, resetDb, createTestCouple } from "../helpers/db";
 
 describe("database schema", () => {
   beforeEach(resetDb);
@@ -22,5 +22,29 @@ describe("database schema", () => {
     await expect(
       db.insert(coupleMembers).values({ coupleId: second.id, userId: member.id }),
     ).rejects.toThrow();
+  });
+
+  it("cascades plans when their couple is deleted", async () => {
+    const member = await createTestUser();
+    const coupleId = await createTestCouple(member.id);
+    await db.insert(plans).values({ coupleId, createdBy: member.id, type: "dinner", title: "Ramen" });
+
+    await db.delete(couples).where(eq(couples.id, coupleId));
+
+    expect(await db.select().from(plans)).toHaveLength(0);
+  });
+
+  it("defaults a plan to the idea status with no date or time", async () => {
+    const member = await createTestUser();
+    const coupleId = await createTestCouple(member.id);
+
+    const [row] = await db
+      .insert(plans)
+      .values({ coupleId, createdBy: member.id, type: "movie", title: "Interstellar" })
+      .returning();
+
+    expect(row.status).toBe("idea");
+    expect(row.onDate).toBeNull();
+    expect(row.atTime).toBeNull();
   });
 });

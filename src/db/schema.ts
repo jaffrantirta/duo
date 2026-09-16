@@ -1,4 +1,4 @@
-import { boolean, date, index, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, date, index, pgTable, primaryKey, text, time, timestamp } from "drizzle-orm/pg-core";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () =>
@@ -115,4 +115,27 @@ export const coupleInvites = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("couple_invites_couple_id_idx").on(t.coupleId)],
+);
+
+export const plans = pgTable(
+  "plans",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    coupleId: text("couple_id")
+      .notNull()
+      .references(() => couples.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    onDate: date("on_date", { mode: "string" }),
+    atTime: time("at_time"),
+    status: text("status").notNull().default("idea"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("plans_couple_id_idx").on(t.coupleId)],
 );
