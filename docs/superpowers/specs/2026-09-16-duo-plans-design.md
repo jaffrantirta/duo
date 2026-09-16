@@ -135,7 +135,7 @@ dateless). The whole row links to `/plans/[id]`.
 Empty state, when the couple has no plans at all: "Nothing planned yet 💭" with a line inviting
 them to add the first one.
 
-A floating "+ New plan" button links to `/plans/new`.
+A "+ New" button in the page header links to `/plans/new`.
 
 ### `/plans/new`
 
