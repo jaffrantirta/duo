@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-13
 **Status:** Approved
-**Stack:** Next.js 16 (App Router, TypeScript) · Neon Postgres · Drizzle ORM · Better Auth · Tailwind CSS + shadcn/ui · Resend · Vercel
+**Stack:** Next.js 16 (App Router, TypeScript) · Neon Postgres · Drizzle ORM · Better Auth · Tailwind CSS + shadcn/ui · SMTP (nodemailer) · Vercel
 
 ## Product context
 
@@ -73,7 +73,7 @@ src/
     couples.ts                       # createCouple, getCoupleForUser
     invites.ts                       # createInvite, getInviteByToken, acceptInvite
     dates.ts                         # daysTogether(togetherSince, timezone)
-    email.ts                         # Resend magic-link sender
+    email.ts                         # SMTP magic-link sender (nodemailer)
   components/ui/                     # shadcn components (restyled)
   components/                        # app components
 drizzle/                             # generated migrations
@@ -129,7 +129,7 @@ single-use, expires in 7 days, and the inviter sees who joined.
 
 ### Sign in
 1. `/sign-in` offers "Continue with Google" and an email field for a magic link.
-2. Magic link: Better Auth `magicLink` plugin; email sent via Resend; link valid 15 minutes.
+2. Magic link: Better Auth `magicLink` plugin; email sent via SMTP; link valid 15 minutes.
    After submitting, the user sees `/check-email`.
 3. Both methods accept a `callbackURL` so an invitee returns to `/invite/[token]` after signing in.
 4. After sign-in without a callback, `/` routes: no couple → `/onboarding`; has couple → `/home`.
@@ -201,7 +201,8 @@ action share one set of reason codes and messages.
   `drizzle-kit migrate` as part of the Vercel build command (`drizzle-kit migrate && next build`).
 - Environment variables:
   `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`,
-  `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`.
+  `GOOGLE_CLIENT_SECRET`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
+  `SMTP_SECURE`, `EMAIL_FROM`.
 - Google OAuth redirect URIs: `http://localhost:3000/api/auth/callback/google` and the production
   domain. Preview deployments use magic link only (Google rejects wildcard redirect URIs).
 
@@ -209,7 +210,7 @@ action share one set of reason codes and messages.
 
 - Server Actions validate input with Zod and return typed errors rendered inline on forms.
 - Invite and pairing failures map to the reason codes above; never a raw 500.
-- Resend failures on magic-link send show "We couldn't send the email, try again".
+- SMTP failures on magic-link send show "We couldn't send the email, try again".
 - Unexpected errors fall through to a cute `app/error.tsx` boundary; `app/not-found.tsx` likewise.
 
 ## Testing
@@ -224,8 +225,8 @@ action share one set of reason codes and messages.
   - Creating a new invite revokes the previous one.
   - `daysTogether`: timezone boundary cases, day 0.
 - **Playwright (e2e):** user A signs in via magic link (test mode captures the link instead of
-  sending through Resend), onboards, copies invite; user B opens it in a second browser context,
+  sending over SMTP), onboards, copies invite; user B opens it in a second browser context,
   signs in, accepts; both see "A ❤️ B · together for N days".
 - Test email transport: when `EMAIL_TRANSPORT=file`, `email.ts` writes each magic link to
-  `.e2e-mail/<email>.txt` instead of calling Resend; Playwright reads the link from there.
-  Production always uses Resend.
+  `.e2e-mail/<email>.txt` instead of sending over SMTP; Playwright reads the link from there.
+  Production always sends over SMTP.

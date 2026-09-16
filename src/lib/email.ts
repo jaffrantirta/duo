@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 export async function sendMagicLinkEmail({ to, url }: { to: string; url: string }): Promise<void> {
   if (
@@ -14,21 +14,33 @@ export async function sendMagicLinkEmail({ to, url }: { to: string; url: string 
     return;
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const user = process.env.SMTP_USERNAME;
+  const pass = process.env.SMTP_PASSWORD;
   const from = process.env.EMAIL_FROM;
-  if (!apiKey || !from) {
-    throw new Error("RESEND_API_KEY and EMAIL_FROM must be set");
+  if (!host || !port || !user || !pass || !from) {
+    throw new Error("SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD and EMAIL_FROM must be set");
   }
 
-  const { error } = await new Resend(apiKey).emails.send({
-    from,
-    to,
-    subject: "Your Duo sign-in link 💌",
-    text: `Tap to sign in to Duo:\n\n${url}\n\nThis link expires in 15 minutes.`,
-    html: magicLinkHtml(url),
+  const transport = nodemailer.createTransport({
+    host,
+    port: Number(port),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: { user, pass },
   });
-  if (error) {
-    throw new Error(`Resend failed: ${error.message}`);
+
+  try {
+    await transport.sendMail({
+      from,
+      to,
+      subject: "Your Duo sign-in link 💌",
+      text: `Tap to sign in to Duo:\n\n${url}\n\nThis link expires in 15 minutes.`,
+      html: magicLinkHtml(url),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`SMTP send failed: ${message}`);
   }
 }
 
