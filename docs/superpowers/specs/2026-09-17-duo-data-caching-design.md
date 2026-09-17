@@ -89,9 +89,11 @@ as-is:
 
 - `getCachedPlans(coupleId)` — `listPlans` wrapped in `unstable_cache`, tagged `plans-{coupleId}`.
 - `getCachedNextPlan(coupleId, today)` — `getNextPlan` wrapped in `unstable_cache`, tagged
-  `plans-{coupleId}`. `today` is part of the cache key (an argument, which `unstable_cache`
-  includes automatically), so a cached entry is only ever reused for the same calendar day — a
-  midnight rollover naturally produces a fresh cache key rather than serving yesterday's answer.
+  `plans-{coupleId}`. `today` is part of the cache key because it's listed explicitly in
+  `unstable_cache`'s `keyParts` array (`["next-plan", coupleId, today]`) — the wrapped closure
+  itself takes zero arguments, so there's nothing for `unstable_cache` to auto-capture there. A
+  cached entry is only ever reused for the same calendar day — a midnight rollover naturally
+  produces a fresh cache key rather than serving yesterday's answer.
 
 `src/app/(app)/plans/page.tsx` and `src/app/(app)/home/page.tsx` call these cached versions
 instead of the originals.
@@ -120,6 +122,12 @@ never cached, so the first read after redirect naturally populates the cache cor
 
 Session/login checks, `getPlan`, invite-preview reads, `regenerateInviteAction` — see Non-goals.
 
+- If a future feature ever writes to a couple's cached fields after pairing (for example, if
+  `disabledPaths: ["/update-user"]` in `auth.ts` is ever relaxed, or a profile/settings screen is
+  added that changes a member's name or image), that write must call
+  `updateTag(\`couple-${coupleId}\`)` or the cached couple data goes stale for up to a year (no
+  time-based revalidate window exists on that cache entry, by design — see Mechanism).
+
 ## Error handling
 
 No new error paths. Cache misses transparently fall through to the same query that runs today; a
@@ -135,11 +143,22 @@ touch.
 than throwing for a couple id with no rows — closes the parked bug, directly testable since it's
 the uncached function.
 
-**Existing Playwright e2e is the correctness regression test for this whole feature.** It already
-asserts read-your-own-writes behavior end to end: create a plan, expect to see it on `/plans`
-immediately; mark it done, expect it to move sections immediately; both partners see the shared
-plan. None of these assertions test caching directly, but if `updateTag`'s invalidation were wrong,
-this suite would start failing. It must still pass unmodified.
+**Existing Playwright e2e is the correctness regression test for this whole feature, but it
+exercises the two invalidation tags unevenly.** The couple-invitation assertion (one partner sees
+the other's name on `/home` immediately after they accept) is a genuine, isolated proof that
+`updateTag(couple-{coupleId})` works: `acceptInviteAction` makes no `revalidatePath` call, so
+nothing else could be making that read fresh. The plans assertions (create a plan, expect to see
+it on `/plans` immediately; mark it done, expect it to move sections immediately; both partners
+see the shared plan) prove the write-then-read flow works end to end, but `refresh()` in
+`plans/actions.ts` also calls `revalidatePath("/plans")` and `revalidatePath("/home")` alongside
+`updateTag(plans-{coupleId})` — and in Next 16, a `revalidatePath` call already fully expires the
+same `unstable_cache` entries via an implicit path-based tag, with the same immediate-expiration
+semantics as `updateTag`. So the plans assertions would pass identically even if
+`updateTag(plans-{coupleId})` were deleted; they don't isolate it from that redundant mechanism.
+The `plans-{coupleId}` tag is kept regardless — it's the correct long-term invalidation path for
+any future reader of `getCachedPlans`/`getCachedNextPlan` that isn't also covered by those two
+specific `revalidatePath` calls — but that's a design intent, not something the current suite
+proves independently. It must still pass unmodified.
 
 **Manual dev-server verification** (not a committed test — needs Next's real runtime and
 observing whether a query actually ran, which Vitest can't do here): temporarily log inside the
