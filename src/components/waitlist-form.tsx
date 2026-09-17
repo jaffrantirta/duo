@@ -29,6 +29,8 @@ export function WaitlistForm() {
           name="email"
           type="email"
           required
+          autoComplete="email"
+          inputMode="email"
           placeholder="you@example.com"
           defaultValue={state.values?.email}
           aria-invalid={Boolean(state.error)}

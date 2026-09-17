@@ -10,7 +10,7 @@ export function FeatureCard({ emoji, title, description, status }: Props) {
       </span>
       <div className="flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-display text-lg font-bold">{title}</h3>
+          <h2 className="font-display text-lg font-bold">{title}</h2>
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-xs font-medium",

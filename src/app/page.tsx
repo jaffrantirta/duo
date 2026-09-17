@@ -41,7 +41,7 @@ export default async function RootPage() {
   return (
     <div className="flex flex-1 flex-col gap-12 py-4">
       <header className="space-y-6">
-        <p className="font-display text-7xl font-bold tracking-tight">duo</p>
+        <h1 className="font-display text-7xl font-bold tracking-tight">duo</h1>
         <p className="text-lg text-muted-foreground">A little world for the two of you.</p>
         <WaitlistForm />
       </header>
