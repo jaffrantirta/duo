@@ -139,3 +139,11 @@ export const plans = pgTable(
   },
   (t) => [index("plans_couple_id_idx").on(t.coupleId)],
 );
+
+export const waitlist = pgTable("waitlist", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  createdAt: createdAt(),
+});
