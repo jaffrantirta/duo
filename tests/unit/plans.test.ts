@@ -145,6 +145,24 @@ describe("getPlan, updatePlan, setPlanStatus, deletePlan", () => {
     expect((await getPlan(coupleId, created.plan.id))?.status).toBe("idea");
   });
 
+  it("keeps a planned plan planned when its date is cleared", async () => {
+    const { coupleId, userId } = await couple();
+    const created = await createPlan(coupleId, userId, {
+      type: "dinner",
+      title: "Ramen",
+      onDate: "2026-10-03",
+      atTime: "19:30",
+    });
+    if (!created.ok) throw new Error("setup failed");
+
+    const updated = await updatePlan(coupleId, created.plan.id, { type: "dinner", title: "Ramen", ...EMPTY });
+
+    expect(updated.ok && updated.plan.status).toBe("planned");
+    expect(updated.ok && updated.plan.onDate).toBeNull();
+    expect(updated.ok && updated.plan.atTime).toBeNull();
+    expect(await getNextPlan(coupleId, "2026-10-01")).toBeNull();
+  });
+
   it("refuses every operation for another couple's plan", async () => {
     const mine = await couple();
     const theirs = await couple();
@@ -210,6 +228,14 @@ describe("getNextPlan", () => {
     await createPlan(coupleId, userId, { type: "dinner", title: "Far", onDate: "2026-12-01", atTime: "" });
 
     expect((await getNextPlan(coupleId, "2026-10-01"))?.title).toBe("Lunch");
+  });
+
+  it("puts a timed plan before an untimed one on the same day", async () => {
+    const { coupleId, userId } = await couple();
+    await createPlan(coupleId, userId, { type: "dinner", title: "All day", onDate: "2026-10-03", atTime: "" });
+    await createPlan(coupleId, userId, { type: "dinner", title: "Breakfast", onDate: "2026-10-03", atTime: "08:00" });
+
+    expect((await getNextPlan(coupleId, "2026-10-01"))?.title).toBe("Breakfast");
   });
 
   it("ignores ideas, done plans and dateless plans", async () => {
