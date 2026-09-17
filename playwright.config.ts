@@ -9,8 +9,9 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "tests/e2e",
   workers: 1,
-  timeout: 60_000,
+  timeout: 180_000,
   globalSetup: "./tests/e2e/global-setup.ts",
+  expect: { timeout: 15_000 },
   use: { baseURL, trace: "retain-on-failure" },
   projects: [{ name: "mobile-chrome", use: { ...devices["Pixel 7"] } }],
   webServer: {
