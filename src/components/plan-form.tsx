@@ -63,7 +63,7 @@ export function PlanForm({ action, submitLabel, pendingLabel, defaults }: Props)
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="onDate">When?</Label>
           <Input
             id="onDate"
@@ -76,7 +76,7 @@ export function PlanForm({ action, submitLabel, pendingLabel, defaults }: Props)
           {state.fieldErrors?.onDate && <p className="text-sm text-destructive">{state.fieldErrors.onDate}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="atTime">Time</Label>
           <Input
             id="atTime"

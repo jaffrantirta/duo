@@ -1,12 +1,13 @@
 "use client";
 
+import { Calendar, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/home", label: "Home", emoji: "🏠" },
-  { href: "/plans", label: "Plans", emoji: "📅" },
+  { href: "/home", label: "Home", icon: Home },
+  { href: "/plans", label: "Plans", icon: Calendar },
 ];
 
 export function BottomNav() {
@@ -27,9 +28,7 @@ export function BottomNav() {
                 active ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              <span className="text-xl" aria-hidden>
-                {tab.emoji}
-              </span>
+              <tab.icon className="size-5" strokeWidth={active ? 2.5 : 2} aria-hidden />
               {tab.label}
             </Link>
           );
