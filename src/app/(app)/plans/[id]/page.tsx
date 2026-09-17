@@ -27,7 +27,7 @@ export default async function EditPlanPage({ params }: { params: Promise<{ id: s
         }}
       />
 
-      <PlanActions plan={plan} />
+      <PlanActions plan={{ id: plan.id, status: plan.status }} />
     </div>
   );
 }

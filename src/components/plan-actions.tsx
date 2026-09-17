@@ -2,7 +2,7 @@
 
 import { deletePlanAction, setPlanStatusAction } from "@/app/(app)/plans/actions";
 import { Button } from "@/components/ui/button";
-import type { Plan, PlanStatus } from "@/lib/plans";
+import type { PlanStatus } from "@/lib/plans";
 
 const MOVES: { status: PlanStatus; label: string }[] = [
   { status: "idea", label: "💭 Back to idea" },
@@ -10,7 +10,7 @@ const MOVES: { status: PlanStatus; label: string }[] = [
   { status: "done", label: "❤️ Mark done" },
 ];
 
-export function PlanActions({ plan }: { plan: Plan }) {
+export function PlanActions({ plan }: { plan: { id: string; status: PlanStatus } }) {
   return (
     <div className="space-y-3">
       <div className="grid gap-2">
