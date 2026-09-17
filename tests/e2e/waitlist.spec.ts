@@ -7,7 +7,7 @@ test("landing page explains the features and captures a waitlist email, with no 
   await page.goto("/");
 
   await expect(page.getByText("A little world for the two of you.")).toBeVisible();
-  await expect(page.getByText("Our Plans").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Our Plans" })).toBeVisible();
   await expect(page.getByText("Coming soon").first()).toBeVisible();
 
   await expect(page.getByRole("link", { name: /sign in/i })).toHaveCount(0);
