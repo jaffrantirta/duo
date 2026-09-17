@@ -1,4 +1,5 @@
 import { asc, eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
@@ -55,14 +56,19 @@ export async function createCouple(
   }
 }
 
-export async function getCoupleForUser(userId: string): Promise<CoupleWithMembers | null> {
+// Uncached: a single indexed lookup, already fast, and it's the function that decides
+// whether the (cached) join query below even needs to run.
+export async function findCoupleIdForUser(userId: string): Promise<string | null> {
   const [membership] = await db
     .select({ coupleId: coupleMembers.coupleId })
     .from(coupleMembers)
     .where(eq(coupleMembers.userId, userId))
     .limit(1);
-  if (!membership) return null;
+  return membership?.coupleId ?? null;
+}
 
+// Uncached, keyed by coupleId (not userId) so both partners share one cache entry above.
+export async function getCoupleById(coupleId: string): Promise<CoupleWithMembers | null> {
   const rows = await db
     .select({
       coupleId: couples.id,
@@ -74,12 +80,28 @@ export async function getCoupleForUser(userId: string): Promise<CoupleWithMember
     .from(couples)
     .innerJoin(coupleMembers, eq(coupleMembers.coupleId, couples.id))
     .innerJoin(user, eq(user.id, coupleMembers.userId))
-    .where(eq(couples.id, membership.coupleId))
+    .where(eq(couples.id, coupleId))
     .orderBy(asc(coupleMembers.joinedAt));
+
+  if (rows.length === 0) return null;
 
   return {
     id: rows[0].coupleId,
     togetherSince: rows[0].togetherSince,
     members: rows.map((row) => ({ id: row.memberId, name: row.memberName, image: row.memberImage })),
   };
+}
+
+export async function getCoupleForUser(userId: string): Promise<CoupleWithMembers | null> {
+  const coupleId = await findCoupleIdForUser(userId);
+  if (!coupleId) return null;
+  return getCoupleById(coupleId);
+}
+
+// unstable_cache throws outside a real Next.js request, so this must never be called
+// from a Vitest test — only from src/lib/session.ts, which is already server-only.
+export function getCachedCoupleById(coupleId: string): Promise<CoupleWithMembers | null> {
+  return unstable_cache(() => getCoupleById(coupleId), ["couple-by-id", coupleId], {
+    tags: [`couple-${coupleId}`],
+  })();
 }

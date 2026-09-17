@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { coupleMembers, user } from "@/db/schema";
-import { createCouple, getCoupleForUser } from "@/lib/couples";
+import { createCouple, getCoupleById, getCoupleForUser } from "@/lib/couples";
 import { getActiveInvite } from "@/lib/invites";
 import { createTestUser, resetDb } from "../helpers/db";
 
@@ -92,5 +92,13 @@ describe("getCoupleForUser", () => {
     const couple = await getCoupleForUser(second.id);
 
     expect(couple?.members.map((m) => m.name)).toEqual(["Jaffran", "Sarah"]);
+  });
+});
+
+describe("getCoupleById", () => {
+  beforeEach(resetDb);
+
+  it("returns null for a couple id that doesn't exist", async () => {
+    expect(await getCoupleById("not-a-real-id")).toBeNull();
   });
 });
