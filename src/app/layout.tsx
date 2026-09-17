@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { TimezoneCookie } from "@/components/timezone-cookie";
+import { getSession } from "@/lib/session";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -16,11 +17,12 @@ export const viewport: Viewport = {
   themeColor: "#FBF8F3",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
   return (
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        <TimezoneCookie />
+        {session && <TimezoneCookie />}
         <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">{children}</main>
       </body>
     </html>
