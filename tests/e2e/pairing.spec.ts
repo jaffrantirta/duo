@@ -1,26 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { expect, test, type Page } from "@playwright/test";
-
-async function readMagicLink(email: string): Promise<string> {
-  let link = "";
-  await expect
-    .poll(
-      async () => {
-        link = await readFile(`.e2e-mail/${email}.txt`, "utf8").then((s) => s.trim(), () => "");
-        return link;
-      },
-      { timeout: 15_000 },
-    )
-    .not.toBe("");
-  return link;
-}
-
-async function signInWithEmail(page: Page, email: string) {
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: "Email me a link" }).click();
-  await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible();
-  await page.goto(await readMagicLink(email));
-}
+import { expect, test } from "@playwright/test";
+import { signInWithEmail } from "./helpers";
 
 test("two people sign up, pair with an invite link and share a home", async ({ browser }) => {
   const stamp = Date.now();
@@ -31,8 +10,7 @@ test("two people sign up, pair with an invite link and share a home", async ({ b
   const sarah = await (await browser.newContext()).newPage();
 
   // Jaffran signs up and creates the couple
-  await jaffran.goto("/");
-  await expect(jaffran).toHaveURL(/\/sign-in$/);
+  await jaffran.goto("/sign-in");
   await signInWithEmail(jaffran, jaffranEmail);
   await expect(jaffran).toHaveURL(/\/onboarding$/);
   await jaffran.getByLabel("What should we call you?").fill("Jaffran");
