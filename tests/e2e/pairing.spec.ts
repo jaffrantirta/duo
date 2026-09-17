@@ -68,4 +68,35 @@ test("two people sign up, pair with an invite link and share a home", async ({ b
   await signInWithEmail(stranger, `stranger-${stamp}@duo.test`);
   await stranger.goto(inviteLink);
   await expect(stranger.getByRole("heading", { name: "This link was already used" })).toBeVisible();
+
+  // Plans: Sarah adds one, both see it on home, then it gets marked done.
+  const planDate = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
+  await sarah.goto("/plans");
+  await expect(sarah.getByText("Nothing planned yet")).toBeVisible();
+
+  await sarah.getByRole("link", { name: "+ New" }).click();
+  await sarah.getByRole("button", { name: "Dinner" }).click();
+  await sarah.getByLabel("What is it?").fill("Ramen Danbo");
+  await sarah.getByLabel("When?").fill(planDate);
+  await sarah.getByLabel("Time").fill("19:30");
+  await sarah.getByRole("button", { name: "Add plan" }).click();
+
+  await expect(sarah).toHaveURL(/\/plans$/);
+  await expect(sarah.getByText("📌 Planned")).toBeVisible();
+  await expect(sarah.getByText("Ramen Danbo")).toBeVisible();
+
+  await sarah.goto("/home");
+  await expect(sarah.getByTestId("next-plan")).toContainText("Ramen Danbo");
+
+  await jaffran.goto("/home");
+  await expect(jaffran.getByTestId("next-plan")).toContainText("Ramen Danbo");
+
+  await jaffran.getByTestId("next-plan").click();
+  await expect(jaffran.getByRole("heading", { name: "Edit plan" })).toBeVisible();
+  await jaffran.getByRole("button", { name: "❤️ Mark done" }).click();
+
+  await expect(jaffran).toHaveURL(/\/plans$/);
+  await expect(jaffran.getByText("❤️ Done")).toBeVisible();
+  await jaffran.goto("/home");
+  await expect(jaffran.getByTestId("next-plan")).toHaveCount(0);
 });

@@ -4,7 +4,7 @@ type Props = { firstName: string; secondName: string; days: number };
 
 export function CoupleHero({ firstName, secondName, days }: Props) {
   return (
-    <div className="flex flex-1 flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex justify-end">
         <SignOutButton />
       </div>
