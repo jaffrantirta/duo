@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { plans } from "@/db/schema";
@@ -147,4 +148,18 @@ export async function getNextPlan(coupleId: string, today: string): Promise<Plan
     .limit(1);
 
   return row ? toPlan(row) : null;
+}
+
+// unstable_cache throws outside a real Next.js request — only call these from page.tsx
+// files, never from a function Vitest calls directly.
+export function getCachedPlans(coupleId: string): Promise<{ idea: Plan[]; planned: Plan[]; done: Plan[] }> {
+  return unstable_cache(() => listPlans(coupleId), ["plans-grouped", coupleId], {
+    tags: [`plans-${coupleId}`],
+  })();
+}
+
+export function getCachedNextPlan(coupleId: string, today: string): Promise<Plan | null> {
+  return unstable_cache(() => getNextPlan(coupleId, today), ["next-plan", coupleId, today], {
+    tags: [`plans-${coupleId}`],
+  })();
 }

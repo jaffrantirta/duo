@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { acceptInvite, type InviteProblem } from "@/lib/invites";
 import { requireUser } from "@/lib/session";
@@ -16,7 +17,10 @@ export async function acceptInviteAction(
 
   const result = await acceptInvite(token, { userId: user.id, name });
 
-  if (result.ok) redirect("/home");
+  if (result.ok) {
+    updateTag(`couple-${result.coupleId}`);
+    redirect("/home");
+  }
   if (result.reason === "invalid_name") return { nameError: result.message, name };
   return { reason: result.reason };
 }

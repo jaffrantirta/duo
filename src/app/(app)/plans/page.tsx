@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PlanRow } from "@/components/plan-row";
 import { buttonVariants } from "@/components/ui/button";
-import { listPlans, type Plan } from "@/lib/plans";
+import { getCachedPlans, type Plan } from "@/lib/plans";
 import { requireCouple } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 export default async function PlansPage() {
   const { couple } = await requireCouple();
-  const { idea, planned, done } = await listPlans(couple.id);
+  const { idea, planned, done } = await getCachedPlans(couple.id);
   const total = idea.length + planned.length + done.length;
 
   return (

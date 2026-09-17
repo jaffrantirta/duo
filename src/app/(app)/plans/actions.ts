@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createPlan,
@@ -26,9 +26,10 @@ function readPlanInput(formData: FormData) {
   };
 }
 
-function refresh() {
+function refresh(coupleId: string) {
   revalidatePath("/plans");
   revalidatePath("/home");
+  updateTag(`plans-${coupleId}`);
 }
 
 export async function createPlanAction(_prev: PlanFormState, formData: FormData): Promise<PlanFormState> {
@@ -40,7 +41,7 @@ export async function createPlanAction(_prev: PlanFormState, formData: FormData)
     return { fieldErrors: result.reason === "invalid_input" ? result.fieldErrors : {}, values };
   }
 
-  refresh();
+  refresh(couple.id);
   redirect("/plans");
 }
 
@@ -58,20 +59,20 @@ export async function updatePlanAction(
     return { fieldErrors: result.fieldErrors, values };
   }
 
-  refresh();
+  refresh(couple.id);
   redirect("/plans");
 }
 
 export async function setPlanStatusAction(planId: string, status: PlanStatus): Promise<void> {
   const { couple } = await requireCouple();
   await setPlanStatus(couple.id, planId, status);
-  refresh();
+  refresh(couple.id);
   redirect("/plans");
 }
 
 export async function deletePlanAction(planId: string): Promise<void> {
   const { couple } = await requireCouple();
   await deletePlan(couple.id, planId);
-  refresh();
+  refresh(couple.id);
   redirect("/plans");
 }
