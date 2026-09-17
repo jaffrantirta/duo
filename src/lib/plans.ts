@@ -152,6 +152,11 @@ export async function getNextPlan(coupleId: string, today: string): Promise<Plan
 
 // unstable_cache throws outside a real Next.js request — only call these from page.tsx
 // files, never from a function Vitest calls directly.
+//
+// unstable_cache JSON-round-trips its result: on a cache hit, createdAt/updatedAt come back
+// as ISO strings rather than Date objects (a cache miss returns real Dates). Nothing above
+// listPlans' own sort reads those fields on the returned data — keep it that way, or narrow
+// the return type if a future caller needs to read them.
 export function getCachedPlans(coupleId: string): Promise<{ idea: Plan[]; planned: Plan[]; done: Plan[] }> {
   return unstable_cache(() => listPlans(coupleId), ["plans-grouped", coupleId], {
     tags: [`plans-${coupleId}`],
