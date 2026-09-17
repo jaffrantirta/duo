@@ -20,6 +20,14 @@ test("landing page explains the features and captures a waitlist email, with no 
   await expect(page.getByText("You're on the list")).toBeVisible();
 });
 
+test("a validation error keeps the typed email in the field", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Email").first().fill("a@b");
+  await page.getByRole("button", { name: "Join the waitlist" }).first().click();
+  await expect(page.getByText("Enter a valid email")).toBeVisible();
+  await expect(page.getByLabel("Email").first()).toHaveValue("a@b");
+});
+
 test("a signed-in visit to / redirects away from the landing page", async ({ page }) => {
   const email = `landing-redirect-${Date.now()}@duo.test`;
 

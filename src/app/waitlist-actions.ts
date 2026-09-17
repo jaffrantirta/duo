@@ -2,7 +2,7 @@
 
 import { joinWaitlist } from "@/lib/waitlist";
 
-export type WaitlistFormState = { done?: boolean; error?: string };
+export type WaitlistFormState = { done?: boolean; error?: string; values?: { email: string } };
 
 export async function joinWaitlistAction(
   _prev: WaitlistFormState,
@@ -11,6 +11,6 @@ export async function joinWaitlistAction(
   const email = String(formData.get("email") ?? "");
   const result = await joinWaitlist(email);
 
-  if (!result.ok) return { error: result.error };
+  if (!result.ok) return { error: result.error, values: { email } };
   return { done: true };
 }

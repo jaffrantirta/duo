@@ -30,6 +30,7 @@ export function WaitlistForm() {
           type="email"
           required
           placeholder="you@example.com"
+          defaultValue={state.values?.email}
           aria-invalid={Boolean(state.error)}
           className="h-12 rounded-2xl bg-card text-base"
         />
