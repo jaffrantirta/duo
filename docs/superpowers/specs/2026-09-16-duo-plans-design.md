@@ -129,7 +129,7 @@ unchanged.
 ### `/plans`
 
 Three sections in order — 📌 Planned, 💭 Ideas, ❤️ Done — each rendered only when it has rows.
-A row shows the type emoji, the title, and the date ("Sat 3 Oct · 7:30 PM", or nothing when
+A row shows the type emoji, the title, and the date ("Sat 3 Oct · 7:30 pm", or nothing when
 dateless). The whole row links to `/plans/[id]`.
 
 Empty state, when the couple has no plans at all: "Nothing planned yet 💭" with a line inviting
