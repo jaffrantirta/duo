@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { updatePlanAction } from "@/app/(app)/plans/actions";
 import { PlanActions } from "@/components/plan-actions";
 import { PlanForm } from "@/components/plan-form";
-import { getPlan } from "@/lib/plans";
+import { getPlan, type PlanStatus } from "@/lib/plans";
 import { requireCouple } from "@/lib/session";
 
 export default async function EditPlanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +27,7 @@ export default async function EditPlanPage({ params }: { params: Promise<{ id: s
         }}
       />
 
-      <PlanActions plan={{ id: plan.id, status: plan.status }} />
+      <PlanActions plan={{ id: plan.id, status: plan.status as PlanStatus }} />
     </div>
   );
 }
