@@ -134,6 +134,17 @@ describe("getPlan, updatePlan, setPlanStatus, deletePlan", () => {
     expect(done.ok && done.plan.status).toBe("done");
   });
 
+  it("refuses an unknown status", async () => {
+    const { coupleId, userId } = await couple();
+    const created = await createPlan(coupleId, userId, { type: "dinner", title: "Ramen", ...EMPTY });
+    if (!created.ok) throw new Error("setup failed");
+
+    const result = await setPlanStatus(coupleId, created.plan.id, "cancelled" as never);
+
+    expect(result).toEqual({ ok: false, reason: "not_found" });
+    expect((await getPlan(coupleId, created.plan.id))?.status).toBe("idea");
+  });
+
   it("refuses every operation for another couple's plan", async () => {
     const mine = await couple();
     const theirs = await couple();

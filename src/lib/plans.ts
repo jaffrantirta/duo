@@ -90,6 +90,8 @@ export async function updatePlan(coupleId: string, planId: string, input: PlanIn
 }
 
 export async function setPlanStatus(coupleId: string, planId: string, status: PlanStatus): Promise<PlanResult> {
+  if (!["idea", "planned", "done"].includes(status)) return { ok: false, reason: "not_found" };
+
   const [row] = await db
     .update(plans)
     .set({ status })
