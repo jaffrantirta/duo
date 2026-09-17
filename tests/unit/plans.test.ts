@@ -70,6 +70,19 @@ describe("createPlan", () => {
       "Pick a date for this time",
     );
   });
+
+  it("rejects an out-of-range time", async () => {
+    const { coupleId, userId } = await couple();
+    const result = await createPlan(coupleId, userId, {
+      type: "dinner",
+      title: "Ramen",
+      onDate: "2026-10-03",
+      atTime: "99:99",
+    });
+    expect(result.ok === false && result.reason === "invalid_input" && result.fieldErrors.atTime).toBe(
+      "Pick a valid time",
+    );
+  });
 });
 
 describe("getPlan, updatePlan, setPlanStatus, deletePlan", () => {

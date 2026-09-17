@@ -111,7 +111,7 @@ getNextPlan(coupleId: string, today: string): Promise<Plan | null>
 - `planTitleSchema` — trimmed, min 1 "Give it a name", max 80 "Keep it under 80 characters"
 - `planTypeSchema` — `z.enum` over the 8 slugs, "Pick a type"
 - `planDateSchema` — `z.iso.date()`, "Pick a valid date"
-- `planTimeSchema` — `/^\d{2}:\d{2}$/`, "Pick a valid time"
+- `planTimeSchema` — `/^([01]\d|2[0-3]):[0-5]\d$/`, "Pick a valid time"
 
 Date and time are optional: an empty string passes and stores NULL. A time with no date fails with
 "Pick a date for this time" on the `atTime` field. Unlike `together_since`, a plan's date may be in
