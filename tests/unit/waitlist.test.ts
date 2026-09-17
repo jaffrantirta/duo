@@ -21,6 +21,11 @@ describe("joinWaitlist", () => {
     expect(result).toEqual({ ok: false, error: "Enter a valid email" });
   });
 
+  it("rejects an email over 254 characters", async () => {
+    const result = await joinWaitlist(`${"a".repeat(250)}@b.com`);
+    expect(result).toEqual({ ok: false, error: "Enter a valid email" });
+  });
+
   it("treats a duplicate as success without creating a second row", async () => {
     await joinWaitlist("sarah@example.com");
 

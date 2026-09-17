@@ -25,4 +25,5 @@ export const waitlistEmailSchema = z
   .string()
   .trim()
   .toLowerCase()
+  .max(254, "Enter a valid email")
   .pipe(z.email("Enter a valid email"));
