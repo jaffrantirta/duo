@@ -12,7 +12,7 @@ export function WaitlistForm() {
 
   if (state.done) {
     return (
-      <p className="rounded-2xl bg-mint/60 px-4 py-3 text-center text-sm font-medium">
+      <p role="status" className="rounded-2xl bg-mint/60 px-4 py-3 text-center text-sm font-medium">
         You&apos;re on the list 💌 We&apos;ll let you know.
       </p>
     );
@@ -34,7 +34,11 @@ export function WaitlistForm() {
           aria-invalid={Boolean(state.error)}
           className="h-12 rounded-2xl bg-card text-base"
         />
-        {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+        {state.error && (
+          <p role="alert" className="text-sm text-destructive">
+            {state.error}
+          </p>
+        )}
       </div>
       <Button type="submit" size="lg" className="h-12 shrink-0 rounded-2xl text-base" disabled={pending}>
         {pending ? "Joining…" : "Join the waitlist"}
