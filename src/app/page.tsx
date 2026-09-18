@@ -15,7 +15,7 @@ const FEATURES: { emoji: string; title: string; description: string; status: "li
     emoji: "💡",
     title: "Discover & Match",
     description: "You both swipe on date ideas. A mutual ❤️ is a match, and it goes straight into your plans.",
-    status: "soon",
+    status: "live",
   },
   {
     emoji: "📸",
