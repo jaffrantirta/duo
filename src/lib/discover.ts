@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
@@ -25,22 +25,28 @@ function toCard(row: typeof discoverCards.$inferSelect): DiscoverCard {
 }
 
 export async function getNextCard(coupleId: string, userId: string): Promise<DiscoverCard | null> {
-  const swiped = await db.select({ id: discoverSwipes.cardId }).from(discoverSwipes).where(eq(discoverSwipes.userId, userId));
-  const swipedIds = swiped.map((row) => row.id);
-
+  // One query instead of two: a left-anti-join (unswiped-by-this-user) instead of fetching all
+  // swiped ids first and excluding them client-side. Each round trip matters more right after a
+  // Neon cold start, since only the connection's first query pays the compute wake-up cost.
   const [row] = await db
-    .select()
+    .select({
+      id: discoverCards.id,
+      type: discoverCards.type,
+      title: discoverCards.title,
+      description: discoverCards.description,
+    })
     .from(discoverCards)
+    .leftJoin(discoverSwipes, and(eq(discoverSwipes.cardId, discoverCards.id), eq(discoverSwipes.userId, userId)))
     .where(
       and(
         or(isNull(discoverCards.coupleId), eq(discoverCards.coupleId, coupleId)),
-        swipedIds.length > 0 ? notInArray(discoverCards.id, swipedIds) : undefined,
+        isNull(discoverSwipes.cardId),
       ),
     )
     .orderBy(sql`${discoverCards.coupleId} is null`, asc(discoverCards.createdAt), asc(discoverCards.id))
     .limit(1);
 
-  return row ? toCard(row) : null;
+  return row ?? null;
 }
 
 export async function addCard(coupleId: string, userId: string, input: AddCardInput): Promise<AddCardResult> {
