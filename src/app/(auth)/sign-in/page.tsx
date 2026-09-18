@@ -10,7 +10,7 @@ export default async function SignInPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const callbackURL = safeCallbackPath(params.callbackURL, "/");
+  const callbackURL = safeCallbackPath(params.callbackURL, "/home");
   if (await getSession()) redirect(callbackURL);
 
   return (
