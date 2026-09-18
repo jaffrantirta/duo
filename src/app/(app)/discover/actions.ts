@@ -2,7 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { swipeCard } from "@/lib/discover";
+import { addCard, swipeCard, type AddCardFieldErrors } from "@/lib/discover";
 import { requireCouple } from "@/lib/session";
 
 export async function swipeCardAction(cardId: string, decision: boolean): Promise<void> {
@@ -16,5 +16,24 @@ export async function swipeCardAction(cardId: string, decision: boolean): Promis
     updateTag(`plans-${couple.id}`);
     redirect("/discover?matched=1");
   }
+  redirect("/discover");
+}
+
+export type AddCardFormState = {
+  fieldErrors?: AddCardFieldErrors;
+  values?: { type: string; title: string; description: string };
+};
+
+export async function addCardAction(_prev: AddCardFormState, formData: FormData): Promise<AddCardFormState> {
+  const { user, couple } = await requireCouple();
+  const values = {
+    type: String(formData.get("type") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    description: String(formData.get("description") ?? ""),
+  };
+
+  const result = await addCard(couple.id, user.id, values);
+  if (!result.ok) return { fieldErrors: result.fieldErrors, values };
+
   redirect("/discover");
 }
