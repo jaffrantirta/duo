@@ -147,3 +147,35 @@ export const waitlist = pgTable("waitlist", {
   email: text("email").notNull().unique(),
   createdAt: createdAt(),
 });
+
+export const discoverCards = pgTable(
+  "discover_cards",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    // null = curated card, visible to every couple. Set = a custom card, visible only to that couple.
+    coupleId: text("couple_id").references(() => couples.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("discover_cards_couple_id_idx").on(t.coupleId)],
+);
+
+export const discoverSwipes = pgTable(
+  "discover_swipes",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => discoverCards.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    decision: boolean("decision").notNull(),
+    swipedAt: timestamp("swiped_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.cardId, t.userId] }), index("discover_swipes_user_id_idx").on(t.userId)],
+);

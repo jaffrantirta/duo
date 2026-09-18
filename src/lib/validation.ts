@@ -27,3 +27,9 @@ export const waitlistEmailSchema = z
   .toLowerCase()
   .max(254, "Enter a valid email")
   .pipe(z.email("Enter a valid email"));
+
+export const discoverCardDescriptionSchema = z
+  .string()
+  .trim()
+  .min(1, "Say a bit more")
+  .max(200, "Keep it under 200 characters");
