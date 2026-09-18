@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, notInArray, or } from "drizzle-orm";
+import { and, asc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
@@ -37,7 +37,7 @@ export async function getNextCard(coupleId: string, userId: string): Promise<Dis
         swipedIds.length > 0 ? notInArray(discoverCards.id, swipedIds) : undefined,
       ),
     )
-    .orderBy(asc(discoverCards.createdAt))
+    .orderBy(sql`${discoverCards.coupleId} is null`, asc(discoverCards.createdAt), asc(discoverCards.id))
     .limit(1);
 
   return row ? toCard(row) : null;

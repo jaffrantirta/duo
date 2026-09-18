@@ -75,6 +75,15 @@ describe("getNextCard", () => {
 
     expect((await getNextCard(coupleId, aId))?.id).toBe(first.id);
   });
+
+  it("shows the couple's own card before an older global card", async () => {
+    const { coupleId, aId } = await twoPartnerCouple();
+    await insertCard(null, { title: "Older global card" });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const ours = await insertCard(coupleId, { title: "Our newer idea" });
+
+    expect((await getNextCard(coupleId, aId))?.id).toBe(ours.id);
+  });
 });
 
 describe("addCard", () => {

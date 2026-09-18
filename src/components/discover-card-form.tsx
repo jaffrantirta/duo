@@ -14,7 +14,7 @@ type Props = {
 
 export function DiscoverCardForm({ action }: Props) {
   const [state, formAction, pending] = useActionState<AddCardFormState, FormData>(action, {});
-  const [type, setType] = useState(state.values?.type ?? "dinner");
+  const [type, setType] = useState("dinner");
 
   return (
     <form action={formAction} className="space-y-6">

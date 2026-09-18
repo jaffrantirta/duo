@@ -1,5 +1,5 @@
 import { and, asc, eq, gte, isNotNull, sql } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
+import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { plans } from "@/db/schema";
@@ -167,4 +167,10 @@ export function getCachedNextPlan(coupleId: string, today: string): Promise<Plan
   return unstable_cache(() => getNextPlan(coupleId, today), ["next-plan", coupleId, today], {
     tags: [`plans-${coupleId}`],
   })();
+}
+
+export function refresh(coupleId: string): void {
+  revalidatePath("/plans");
+  revalidatePath("/home");
+  updateTag(`plans-${coupleId}`);
 }

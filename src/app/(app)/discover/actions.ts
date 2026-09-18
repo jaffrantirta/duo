@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { addCard, swipeCard, type AddCardFieldErrors } from "@/lib/discover";
+import { refresh } from "@/lib/plans";
 import { requireCouple } from "@/lib/session";
 
 export async function swipeCardAction(cardId: string, decision: boolean): Promise<void> {
@@ -11,9 +11,7 @@ export async function swipeCardAction(cardId: string, decision: boolean): Promis
   const result = await swipeCard(couple.id, user.id, partnerId, cardId, decision);
 
   if (result.ok && result.match) {
-    revalidatePath("/plans");
-    revalidatePath("/home");
-    updateTag(`plans-${couple.id}`);
+    refresh(couple.id);
     redirect("/discover?matched=1");
   }
   redirect("/discover");

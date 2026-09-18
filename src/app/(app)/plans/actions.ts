@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createPlan,
   deletePlan,
+  refresh,
   setPlanStatus,
   updatePlan,
   type PlanFieldErrors,
@@ -24,12 +24,6 @@ function readPlanInput(formData: FormData) {
     onDate: String(formData.get("onDate") ?? ""),
     atTime: String(formData.get("atTime") ?? ""),
   };
-}
-
-function refresh(coupleId: string) {
-  revalidatePath("/plans");
-  revalidatePath("/home");
-  updateTag(`plans-${coupleId}`);
 }
 
 export async function createPlanAction(_prev: PlanFormState, formData: FormData): Promise<PlanFormState> {
