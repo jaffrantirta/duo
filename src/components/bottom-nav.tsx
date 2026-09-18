@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Home } from "lucide-react";
+import { Calendar, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/plans", label: "Plans", icon: Calendar },
+  { href: "/discover", label: "Discover", icon: Compass },
 ];
 
 export function BottomNav() {
