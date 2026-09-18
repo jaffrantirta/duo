@@ -34,8 +34,11 @@ const FEATURES: { emoji: string; title: string; description: string; status: "li
 export default async function RootPage() {
   const session = await getSession();
   if (session) {
+    // A freshly signed-up user still needs routing into onboarding — that's setup, not "the
+    // dashboard". An already-paired user visiting / directly now sees the landing page instead
+    // of being bounced straight to /home.
     const couple = await getCoupleForUser(session.user.id);
-    redirect(couple ? "/home" : "/onboarding");
+    if (!couple) redirect("/onboarding");
   }
 
   return (
