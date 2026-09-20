@@ -1,5 +1,5 @@
 import { rm } from "node:fs/promises";
-import { Pool } from "@neondatabase/serverless";
+import { Pool } from "pg";
 import { runMigrations } from "../../src/db/run-migrations";
 import { RESET_SQL } from "../helpers/reset-sql";
 
